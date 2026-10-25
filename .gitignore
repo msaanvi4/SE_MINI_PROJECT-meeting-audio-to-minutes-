@@ -225,3 +225,7 @@ __marimo__/
 # Python cache files
 __pycache__/
 *.py[cod]
+
+# Generated meeting minutes samples
+sample_minutes.txt
+sample_minutes.docx
