@@ -226,3 +226,4 @@ __marimo__/
 
 # Python environment and local settings
 .python-version
+.venv311/

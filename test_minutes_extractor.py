@@ -44,6 +44,41 @@ class TestMinutesExtractor(unittest.TestCase):
 
         self.assertTrue(len(result.review_flags) > 0)
 
+    # New test: multiple action items
+    def test_extract_multiple_action_items(self):
+        transcript = (
+            "Ravi will submit the report by Friday. "
+            "Priya will prepare the presentation by Monday."
+        )
+
+        result = MinutesExtractor.extract(transcript)
+
+        self.assertEqual(len(result.action_items), 2)
+
+    # New test: missing owner and deadline must not be invented
+    def test_missing_owner_and_deadline(self):
+        transcript = "The team should review the draft."
+        result = MinutesExtractor.extract(transcript)
+
+        self.assertEqual(len(result.action_items), 1)
+        self.assertEqual(
+            result.action_items[0].owner,
+            "Not specified"
+        )
+        self.assertEqual(
+            result.action_items[0].deadline,
+            "Not specified"
+        )
+
+        self.assertTrue(
+            any("Confirm the owner" in flag
+                for flag in result.review_flags)
+        )
+        self.assertTrue(
+            any("Confirm the deadline" in flag
+                for flag in result.review_flags)
+        )
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
