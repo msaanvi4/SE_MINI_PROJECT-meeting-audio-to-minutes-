@@ -408,6 +408,15 @@ if uploaded_file is not None:
 
                     st.session_state["validated_minutes"] = validated
                     st.session_state["meeting_title"] = validated.title
+
+                    # Refresh the draft so the editor displays the latest
+                    # saved values on the next Streamlit rerun.
+                    st.session_state["minutes_draft"] = MinutesDraft(
+                        topics=list(validated.topics),
+                        decisions=list(validated.decisions),
+                        action_items=list(validated.action_items),
+                        review_flags=list(draft.review_flags),
+                    )
                     st.success("Your edited minutes have been saved.")
 
                 except (ValueError, AttributeError, TypeError) as exc:
