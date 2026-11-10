@@ -1,6 +1,19 @@
+from io import BytesIO
+from unittest.mock import patch
+
 from streamlit.testing.v1 import AppTest
 
 from minutes_extractor import ActionItem, MinutesDraft
+
+
+class FakeUploadedAudio(BytesIO):
+    """Minimal uploaded-file stand-in; transcription is not invoked in this test."""
+
+    name = "test-meeting.wav"
+    size = 44
+
+    def __init__(self):
+        super().__init__(b"RIFF" + b"\x00" * 40)
 
 
 def test_editable_minutes_save_and_docx_download_workflow():
@@ -21,22 +34,24 @@ def test_editable_minutes_save_and_docx_download_workflow():
     at = AppTest.from_file("app.py")
     at.session_state["minutes_draft"] = draft
     at.session_state["minutes_review_flags"] = []
-    at.run()
 
-    assert not at.exception
-    assert len(at.form_submit_button) == 1
-    assert len(at.text_input) == 1
-    assert len(at.text_area) == 3
+    # Keep the upload branch active without invoking audio validation/transcription.
+    with patch("streamlit.file_uploader", return_value=FakeUploadedAudio()):
+        at.run()
 
-    # Simulate edits to all sections, including Unicode and missing metadata.
-    at.text_input[0].set_value("Sprint 2 Review – Q&A")
-    at.text_area[0].set_value("Updated topic\nCafé discussion")
-    at.text_area[1].set_value("Approve the revised plan")
-    at.text_area[2].set_value(
-        "Prepare final report | Owner: Priya | Deadline: Nov 13\n"
-        "Review transcript | Owner: | Deadline:"
-    )
-    at.form_submit_button[0].click().run()
+        assert not at.exception
+        assert len(at.form_submit_button) == 1
+        assert len(at.text_input) == 1
+        assert len(at.text_area) == 3
+
+        at.text_input[0].set_value("Sprint 2 Review – Q&A")
+        at.text_area[0].set_value("Updated topic\nCafé discussion")
+        at.text_area[1].set_value("Approve the revised plan")
+        at.text_area[2].set_value(
+            "Prepare final report | Owner: Priya | Deadline: Nov 13\n"
+            "Review transcript | Owner: | Deadline:"
+        )
+        at.form_submit_button[0].click().run()
 
     assert not at.exception
 
