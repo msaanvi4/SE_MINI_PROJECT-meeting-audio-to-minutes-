@@ -115,8 +115,9 @@ def convert_extraction_to_draft(extraction):
 
 
 def validated_minutes_to_export_dict(validated):
-    """Convert the editor's validated object to Priya's export format."""
+    """Convert the editor's validated object to the export format."""
     return {
+        "title": validated.title,
         "topics": validated.topics,
         "decisions": validated.decisions,
         "action_items": [

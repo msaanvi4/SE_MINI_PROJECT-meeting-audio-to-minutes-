@@ -16,11 +16,18 @@ def export_minutes(minutes, output_path, file_format=None):
     if fmt not in ("txt", "docx"):
         raise ValueError("Supported formats are TXT and DOCX.")
 
+    # Use custom title if provided; otherwise preserve original defaults.
+    title = minutes.get("title")
+
     topics = minutes.get("topics", [])
     decisions = minutes.get("decisions", [])
     action_items = minutes.get("action_items", [])
 
-    lines = ["MEETING MINUTES", ""]
+    # Build TXT content
+    lines = [
+        str(title) if title else "MEETING MINUTES",
+        ""
+    ]
 
     # Discussion Topics
     lines.append("DISCUSSION TOPICS")
@@ -76,7 +83,10 @@ def export_minutes(minutes, output_path, file_format=None):
 
         document = Document()
 
-        document.add_heading("Meeting Minutes", level=0)
+        document.add_heading(
+            str(title) if title else "Meeting Minutes",
+            level=0
+        )
 
         # Discussion Topics
         document.add_heading("Discussion Topics", level=1)
