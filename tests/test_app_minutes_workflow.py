@@ -1,4 +1,5 @@
 from io import BytesIO
+from pathlib import Path
 from unittest.mock import patch
 
 from streamlit.testing.v1 import AppTest
@@ -31,7 +32,8 @@ def test_editable_minutes_save_and_docx_download_workflow():
         review_flags=[],
     )
 
-    at = AppTest.from_file("app.py")
+    app_path = Path(__file__).resolve().parents[1] / "app.py"
+    at = AppTest.from_file(app_path)
     at.session_state["minutes_draft"] = draft
     at.session_state["minutes_review_flags"] = []
 
