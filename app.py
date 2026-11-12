@@ -1,4 +1,5 @@
 import hashlib
+import re
 import tempfile
 from pathlib import Path
 
@@ -360,8 +361,20 @@ if uploaded_file is not None:
                 if not line.strip():
                     continue
 
-                parts = line.split("|")
-                task = parts[0].strip()
+                # Only treat a pipe followed by a recognized metadata label
+                # as a separator. Other pipes remain part of the task text.
+                metadata_match = re.search(
+                    r"\s*\|\s*(?=Owner\s*:|Deadline\s*:)",
+                    line,
+                    flags=re.IGNORECASE,
+                )
+
+                if metadata_match:
+                    task = line[:metadata_match.start()].strip()
+                    metadata_text = line[metadata_match.start():]
+                else:
+                    task = line.strip()
+                    metadata_text = ""
 
                 if not task:
                     parsing_errors.append(
@@ -372,7 +385,7 @@ if uploaded_file is not None:
                 owner = "Not specified"
                 deadline = "Not specified"
 
-                for part in parts[1:]:
+                for part in re.split(r"\s*\|\s*", metadata_text):
                     part = part.strip()
 
                     if part.lower().startswith("owner:"):
