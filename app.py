@@ -1,4 +1,5 @@
 import hashlib
+import re
 import tempfile
 from pathlib import Path
 
@@ -115,8 +116,9 @@ def convert_extraction_to_draft(extraction):
 
 
 def validated_minutes_to_export_dict(validated):
-    """Convert the editor's validated object to Priya's export format."""
+    """Convert the editor's validated object to the export format."""
     return {
+        "title": validated.title,
         "topics": validated.topics,
         "decisions": validated.decisions,
         "action_items": [
@@ -359,8 +361,20 @@ if uploaded_file is not None:
                 if not line.strip():
                     continue
 
-                parts = line.split("|")
-                task = parts[0].strip()
+                # Only treat a pipe followed by a recognized metadata label
+                # as a separator. Other pipes remain part of the task text.
+                metadata_match = re.search(
+                    r"\s*\|\s*(?=Owner\s*:|Deadline\s*:)",
+                    line,
+                    flags=re.IGNORECASE,
+                )
+
+                if metadata_match:
+                    task = line[:metadata_match.start()].strip()
+                    metadata_text = line[metadata_match.start():]
+                else:
+                    task = line.strip()
+                    metadata_text = ""
 
                 if not task:
                     parsing_errors.append(
@@ -371,7 +385,7 @@ if uploaded_file is not None:
                 owner = "Not specified"
                 deadline = "Not specified"
 
-                for part in parts[1:]:
+                for part in re.split(r"\s*\|\s*", metadata_text):
                     part = part.strip()
 
                     if part.lower().startswith("owner:"):
@@ -407,6 +421,15 @@ if uploaded_file is not None:
 
                     st.session_state["validated_minutes"] = validated
                     st.session_state["meeting_title"] = validated.title
+
+                    # Refresh the draft so the editor displays the latest
+                    # saved values on the next Streamlit rerun.
+                    st.session_state["minutes_draft"] = MinutesDraft(
+                        topics=list(validated.topics),
+                        decisions=list(validated.decisions),
+                        action_items=list(validated.action_items),
+                        review_flags=list(draft.review_flags),
+                    )
                     st.success("Your edited minutes have been saved.")
 
                 except (ValueError, AttributeError, TypeError) as exc:

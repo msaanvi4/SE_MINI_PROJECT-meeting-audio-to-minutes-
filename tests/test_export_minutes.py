@@ -289,5 +289,58 @@ class TestExportMinutes(unittest.TestCase):
                 export_minutes(minutes, output)
 
 
+    # 14. Custom meeting title is preserved in TXT and DOCX exports
+    def test_custom_title_is_preserved_in_txt_and_docx(self):
+        minutes = self.sample_minutes()
+        minutes["title"] = "Sprint 2 Review – Bengaluru"
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            txt_output = Path(temp_dir) / "custom_title.txt"
+            docx_output = Path(temp_dir) / "custom_title.docx"
+
+            export_minutes(minutes, txt_output)
+            export_minutes(minutes, docx_output)
+
+            txt_content = txt_output.read_text(encoding="utf-8")
+            docx_content = self.read_docx_text(docx_output)
+
+            self.assertTrue(txt_content.startswith("Sprint 2 Review – Bengaluru"))
+            self.assertIn("Sprint 2 Review – Bengaluru", docx_content)
+
+    # 15. Special characters in editable fields survive both formats
+    def test_special_characters_are_preserved(self):
+        minutes = {
+            "title": "Review: Q&A – 100% complete",
+            "topics": ["Café, AI/ML & testing"],
+            "decisions": ["Use C++ (not C) for the prototype."],
+            "action_items": [
+                {
+                    "task": "Update README: add examples & tests",
+                    "owner": "Priya B M",
+                    "deadline": "12-Nov-2026",
+                }
+            ],
+        }
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            txt_output = Path(temp_dir) / "special.txt"
+            docx_output = Path(temp_dir) / "special.docx"
+
+            export_minutes(minutes, txt_output)
+            export_minutes(minutes, docx_output)
+
+            txt_content = txt_output.read_text(encoding="utf-8")
+            docx_content = self.read_docx_text(docx_output)
+
+            for expected in (
+                "Review: Q&A – 100% complete",
+                "Café, AI/ML & testing",
+                "Use C++ (not C) for the prototype.",
+                "Update README: add examples & tests",
+            ):
+                self.assertIn(expected, txt_content)
+                self.assertIn(expected, docx_content)
+
+
 if __name__ == "__main__":
     unittest.main()
