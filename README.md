@@ -59,7 +59,7 @@ Users can review and edit the transcript and generated minutes before downloadin
 Start the Streamlit application from the project root:
 
 ```powershell
-streamlit run app.py
+python -m streamlit run app.py
 ```
 
 Open the local URL displayed in the terminal.
