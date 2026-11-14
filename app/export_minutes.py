@@ -1,5 +1,18 @@
 
 from pathlib import Path
+import re
+
+
+# XML 1.0 does not allow these characters in DOCX text.
+# Valid tabs, newlines, carriage returns, and Unicode are preserved.
+_INVALID_XML_10_CHARS = re.compile(
+    r"[\x00-\x08\x0B\x0C\x0E-\x1F\uD800-\uDFFF\uFFFE\uFFFF]"
+)
+
+
+def _sanitize_docx_text(value):
+    """Remove characters that XML 1.0 does not allow in DOCX text."""
+    return _INVALID_XML_10_CHARS.sub("", str(value))
 
 
 def export_minutes(minutes, output_path, file_format=None):
@@ -16,14 +29,13 @@ def export_minutes(minutes, output_path, file_format=None):
     if fmt not in ("txt", "docx"):
         raise ValueError("Supported formats are TXT and DOCX.")
 
-    # Use custom title if provided; otherwise preserve original defaults.
     title = minutes.get("title")
 
     topics = minutes.get("topics", [])
     decisions = minutes.get("decisions", [])
     action_items = minutes.get("action_items", [])
 
-    # Build TXT content
+    # Build TXT content. TXT export remains unchanged.
     lines = [
         str(title) if title else "MEETING MINUTES",
         ""
@@ -83,8 +95,9 @@ def export_minutes(minutes, output_path, file_format=None):
 
         document = Document()
 
+        # Meeting title
         document.add_heading(
-            str(title) if title else "Meeting Minutes",
+            _sanitize_docx_text(title) if title else "Meeting Minutes",
             level=0
         )
 
@@ -93,10 +106,8 @@ def export_minutes(minutes, output_path, file_format=None):
 
         if topics:
             for item in topics:
-                document.add_paragraph(
-                    str(item),
-                    style="List Bullet"
-                )
+                clean_item = _sanitize_docx_text(item)
+                document.add_paragraph(f"• {clean_item}")
         else:
             document.add_paragraph("None recorded.")
 
@@ -105,10 +116,8 @@ def export_minutes(minutes, output_path, file_format=None):
 
         if decisions:
             for item in decisions:
-                document.add_paragraph(
-                    str(item),
-                    style="List Bullet"
-                )
+                clean_item = _sanitize_docx_text(item)
+                document.add_paragraph(f"• {clean_item}")
         else:
             document.add_paragraph("None recorded.")
 
@@ -121,9 +130,15 @@ def export_minutes(minutes, output_path, file_format=None):
                 owner = item.get("owner") or "Not specified"
                 deadline = item.get("deadline") or "Not specified"
 
-                document.add_paragraph(f"Task: {task}")
-                document.add_paragraph(f"Owner: {owner}")
-                document.add_paragraph(f"Deadline: {deadline}")
+                document.add_paragraph(
+                    f"Task: {_sanitize_docx_text(task)}"
+                )
+                document.add_paragraph(
+                    f"Owner: {_sanitize_docx_text(owner)}"
+                )
+                document.add_paragraph(
+                    f"Deadline: {_sanitize_docx_text(deadline)}"
+                )
         else:
             document.add_paragraph("None recorded.")
 
