@@ -1,3 +1,4 @@
+
 import tempfile
 import unittest
 from pathlib import Path
@@ -288,7 +289,6 @@ class TestExportMinutes(unittest.TestCase):
             with self.assertRaises(OSError):
                 export_minutes(minutes, output)
 
-
     # 14. Custom meeting title is preserved in TXT and DOCX exports
     def test_custom_title_is_preserved_in_txt_and_docx(self):
         minutes = self.sample_minutes()
@@ -304,7 +304,9 @@ class TestExportMinutes(unittest.TestCase):
             txt_content = txt_output.read_text(encoding="utf-8")
             docx_content = self.read_docx_text(docx_output)
 
-            self.assertTrue(txt_content.startswith("Sprint 2 Review – Bengaluru"))
+            self.assertTrue(
+                txt_content.startswith("Sprint 2 Review – Bengaluru")
+            )
             self.assertIn("Sprint 2 Review – Bengaluru", docx_content)
 
     # 15. Special characters in editable fields survive both formats
@@ -340,6 +342,71 @@ class TestExportMinutes(unittest.TestCase):
             ):
                 self.assertIn(expected, txt_content)
                 self.assertIn(expected, docx_content)
+
+    # 16. Invalid XML control characters are removed from DOCX
+    def test_docx_sanitizes_invalid_xml_control_characters(self):
+        minutes = {
+            "title": "Meeting\x00 Review",
+            "topics": ["Budget\x0b discussion\x01"],
+            "decisions": ["Approved\x0c successfully"],
+            "action_items": [
+                {
+                    "task": "Prepare\x00 the report",
+                    "owner": "Priya\x0b B M",
+                    "deadline": "Friday\x01",
+                }
+            ],
+        }
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "sanitized_minutes.docx"
+
+            export_minutes(minutes, output)
+
+            # Reopening the DOCX confirms it is valid and readable.
+            text = self.read_docx_text(output)
+
+            self.assertTrue(output.exists())
+            self.assertIn("Meeting Review", text)
+            self.assertIn("Budget discussion", text)
+            self.assertIn("Approved successfully", text)
+            self.assertIn("Prepare the report", text)
+            self.assertIn("Priya B M", text)
+            self.assertIn("Friday", text)
+
+            self.assertNotIn("\x00", text)
+            self.assertNotIn("\x0b", text)
+            self.assertNotIn("\x01", text)
+            self.assertNotIn("\x0c", text)
+
+    # 17. Valid Unicode and whitespace are preserved in DOCX
+    def test_docx_preserves_valid_whitespace_and_unicode(self):
+        minutes = {
+            "title": "Review – Bengaluru",
+            "topics": ["Café\tbudget\nplanning"],
+            "decisions": ["₹ report approved ✓"],
+            "action_items": [
+                {
+                    "task": "Prepare résumé",
+                    "owner": "Priyanka B M",
+                    "deadline": "Friday",
+                }
+            ],
+        }
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "unicode_whitespace.docx"
+
+            export_minutes(minutes, output)
+
+            text = self.read_docx_text(output)
+
+            self.assertIn("Review – Bengaluru", text)
+            self.assertIn("Café\tbudget\nplanning", text)
+            self.assertIn("₹ report approved ✓", text)
+            self.assertIn("Prepare résumé", text)
+            self.assertIn("Priyanka B M", text)
+            self.assertIn("Friday", text)
 
 
 if __name__ == "__main__":
