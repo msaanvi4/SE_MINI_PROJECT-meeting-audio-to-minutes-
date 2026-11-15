@@ -107,7 +107,7 @@ def export_minutes(minutes, output_path, file_format=None):
         if topics:
             for item in topics:
                 clean_item = _sanitize_docx_text(item)
-                document.add_paragraph(f"• {clean_item}")
+                document.add_paragraph(clean_item, style="List Bullet")
         else:
             document.add_paragraph("None recorded.")
 
@@ -117,7 +117,7 @@ def export_minutes(minutes, output_path, file_format=None):
         if decisions:
             for item in decisions:
                 clean_item = _sanitize_docx_text(item)
-                document.add_paragraph(f"• {clean_item}")
+                document.add_paragraph(clean_item, style="List Bullet")
         else:
             document.add_paragraph("None recorded.")
 
