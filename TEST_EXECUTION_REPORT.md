@@ -558,3 +558,69 @@ These results demonstrate successful execution of the recorded tests and workflo
 
 
 
+
+---
+
+## Final Independent QA Verification — 16 November 2026
+
+### 1. Test Environment
+- Operating system: Windows 11
+- Processor: Intel Core i5-1334U
+- RAM: 7.69 GB
+- Python: 3.11.9
+- Browser: Google Chrome 157
+- Application: Streamlit 1.66.1
+- Transcription: Faster-Whisper base model, CPU
+
+### 2. Automated Testing
+- Command: .\.venv311\Scripts\python.exe -m pytest -q --tb=short
+- Result: 56 passed, 0 failed
+- Final recorded execution time: 3.64 seconds
+- Status: PASS
+- Evidence: evidence/10_final_56_tests.png
+
+### 3. Code Coverage
+- Application-code combined statement and branch coverage: 81%
+- Coverage including test files: 88%
+- Status: RECORDED
+- Note: Coverage is not equivalent to full functional or security assurance.
+
+### 4. Performance Verification
+- Test input: 600-second synthetic WAV audio
+- File size: approximately 25.23 MB
+- Processing time: 471.11 seconds (7 minutes 51 seconds)
+- Target: complete within 30 minutes
+- Result: PASS
+- Limitation: Synthetic repeated speech; natural meeting audio performance was not established by this test.
+
+### 5. Security and Input Validation
+- Empty audio upload: PASS — rejected with an empty-file message.
+- Corrupted WAV upload: PASS — rejected as invalid or corrupted.
+- Valid WAV larger than 100 MB: PASS — rejected by the uploader.
+- TXT selection through browser file picker: PASS — unsupported selection blocked.
+- Session isolation: PASS — tested between normal Chrome and Incognito sessions.
+- Basic tracked-source secrets scan: PASS — no obvious credentials identified.
+- Terminal output inspection: No transcript or credentials observed in inspected output.
+- HTTPS verification: Not applicable to the tested local-only setup; external deployment not assessed.
+
+Limitations: Browser-side restrictions do not establish resistance to direct backend bypass. Security checks were targeted manual checks, not a comprehensive penetration test or full repository-history audit.
+
+### 6. Compatibility and End-to-End Verification
+- Windows 11 and Chrome 157: PASS for the tested configuration.
+- Sample WAV upload and validation: PASS.
+- Audio transcription: PASS.
+- Structured minutes extraction: PASS.
+- Minutes editing and saving: PASS.
+- DOCX export and opening in Word: PASS.
+
+### 7. Evidence and Privacy Review
+- New automated-test evidence: evidence/10_final_56_tests.png
+- Existing screenshots 01 and 02 contain local username/path information and require redaction before public sharing.
+- Other existing screenshots were visually reviewed; no obvious secrets were identified.
+- Screenshot review does not establish that image metadata is free of sensitive information.
+
+### 8. Final Assessment
+The 56 automated tests passed in the tested Python 3.11 environment. The measured synthetic-audio performance test met the 30-minute target. Targeted security, input-validation, session-isolation and end-to-end checks produced the results recorded above.
+
+Outstanding items include redaction of older evidence screenshots, verification of current GitHub Actions status, and integration review of the final pull request.
+
