@@ -383,7 +383,7 @@ class TestExportMinutes(unittest.TestCase):
     def test_docx_preserves_valid_whitespace_and_unicode(self):
         minutes = {
             "title": "Review – Bengaluru",
-            "topics": ["Café\tbudget\nplanning"],
+            "topics": ["Café\tbudget\nplanning 🧪"],
             "decisions": ["₹ report approved ✓"],
             "action_items": [
                 {
@@ -407,6 +407,7 @@ class TestExportMinutes(unittest.TestCase):
             self.assertIn("Prepare résumé", text)
             self.assertIn("Priyanka B M", text)
             self.assertIn("Friday", text)
+            self.assertIn("🧪", text)
 
 
 if __name__ == "__main__":
