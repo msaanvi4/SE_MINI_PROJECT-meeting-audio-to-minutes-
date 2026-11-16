@@ -824,3 +824,39 @@ On 16 November 2026, the complete local automated test suite passed: **59 passed
 F-06 dependency pinning was completed on `feature/saanvi-ui-redesign` in commit `d6bb550`. The five direct dependencies listed in `requirements.txt` installed successfully in the project virtual environment, and the full 59-test suite passed locally after the change. GitHub Actions Project CI run #45 also passed for commit `d6bb550` on PR #42; this CI result is separate from the local pytest result.
 
 F-01 and F-04 remain fixed based on the recorded manual/source verification. OBS-02 remains fixed and manually verified. F-05 is fixed and locally regression-tested. F-02 remains awaiting review and integration in PR #41. PR #42 remains open and awaits review; its CI run has passed, but it has not been merged. Performance, security/session-isolation, compatibility and final privacy-review activities remain outstanding. The report does not claim exhaustive execution of every STP requirement.
+
+
+# 17. Performance Testing – 16 November 2026
+
+## Objective
+Measure the execution time of minutes extraction and DOCX export.
+
+## Test Environment
+- Python 3.11 virtual environment
+- Windows
+- Five benchmark iterations per operation
+- Synthetic transcript containing 4,200 words and 600 sentences
+
+## Results
+
+| Metric | Average | Median | Minimum |
+|---|---:|---:|---:|
+| Minutes extraction | 0.017347 s | 0.015689 s | 0.009403 s |
+| DOCX export | 1.430602 s | 0.994947 s | 0.834954 s |
+
+## Extraction Results
+- Topics extracted: 200
+- Decisions extracted: 200
+- Action items extracted: 200
+
+## DOCX Export
+- Generated document size: 37.97 KB
+- Export completed successfully.
+
+## Conclusion
+Both minutes extraction and DOCX export completed successfully
+during the local performance benchmark. The results establish
+an initial performance baseline for the tested synthetic input.
+
+Note: Audio transcription performance and end-to-end processing
+time were not measured in this benchmark.
