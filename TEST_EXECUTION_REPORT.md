@@ -795,13 +795,13 @@ The user also confirmed the OBS-02 manual workflow: transcribe a valid recording
 | Finding | Latest status | Evidence / remaining work |
 |---|---|---|
 | F-01 — Temporary audio cleanup | Fixed; manually verified | Cleanup is attempted in the transcription `finally` block and during upload replacement/clear handling. |
-| F-02 — DOCX XML control-character handling | Awaiting review/integration | PR #41 remains subject to review, merge and post-integration verification. |
+| F-02 — DOCX XML control-character handling | Awaiting review/integration | PR #41 remains open and has no review recorded yet. Review, merge and post-integration regression verification are still required. |
 | F-03 — Streamlit traceback details | Previously fixed | `.streamlit/config.toml` sets `showErrorDetails = "none"`; retain the earlier configuration evidence. |
-| F-04 — Raw exception details in UI | Fixed; source-verified | The five identified UI handlers no longer interpolate raw exception details. |
-| F-05 — Audio readability validation | Fixed; locally regression-tested | PyAV stream/container/decode checks; 8 dedicated tests passed and the full 59-test suite passed. |
-| F-06 — Unpinned dependencies | Open | Review dependency pins and separation of test-only requirements. |
-| F-07 — Current CI evidence | Pending | Add a current GitHub Actions run link. The 59-pass result recorded here is local evidence only. |
-| F-08 — Test report currency | Updated | This report records the 16 November 2026 full-suite result; reconcile the other testing reports and CI evidence separately. |
+| F-04 — Raw exception details in UI | Fixed; source-verified | The five identified user-facing error handlers no longer interpolate raw exception details. |
+| F-05 — Audio readability validation | Fixed; locally regression-tested | PyAV stream/container/decode checks; 8 dedicated audio-validator tests passed and the full 59-test suite passed locally. |
+| F-06 — Unpinned dependencies | Fixed on feature branch | `requirements.txt` now pins `streamlit==1.65.0`, `faster-whisper==1.2.1`, `av==18.1.0`, `python-docx==1.2.0`, and `pytest==9.1.1`. The pinned requirements installed successfully in the project virtual environment and the 59-test suite passed locally. |
+| F-07 — Current CI evidence | Verified for PR #42 | GitHub Actions Project CI run #45 passed for commit `d6bb550` on `feature/saanvi-ui-redesign`. [View run #45](https://github.com/msaanvi4/SE_MINI_PROJECT-meeting-audio-to-minutes-/actions/runs/43886639877). |
+| F-08 — Test report currency | Updated in this revision | This section records the 16 November 2026 local test result, dependency pins, and successful CI run. Other historical sections are retained as historical records. |
 | F-09 — General audio ignore rules | Previously fixed | `.gitignore` includes common audio extensions; earlier configuration evidence remains recorded. |
 | OBS-02 — Stale transcript after invalid upload | Fixed; manually verified | Separate selected-upload signature ensures stale transcript/minutes state is cleared when the upload changes or is cleared. |
 
@@ -812,15 +812,15 @@ The following activities remain open and must not be represented as passed witho
 1. Complete the remaining performance tests.
 2. Complete required session-isolation and security checks, or clearly identify the scope of earlier checks.
 3. Complete the browser and operating-system compatibility matrix.
-4. Review and pin dependencies as appropriate (F-06).
-5. Add a current GitHub Actions run link (F-07).
-6. Complete the final privacy review of submitted screenshots and evidence.
-7. Complete review and integration of PR #41 (F-02), then run post-integration regression tests.
-8. Confirm the latest application and documentation changes are integrated into the intended branch before final submission.
+4. Complete the final privacy review of submitted screenshots and evidence.
+5. Complete review and integration of PR #41 (F-02), then run post-integration regression tests.
+6. Obtain review and approval for PR #42, then merge only after the required review and repository checks are satisfied.
+7. Confirm the latest application and documentation changes are integrated into the intended branch before final submission, and run the final regression suite after integration.
 
 ## 16.5 Updated conclusion
 
 On 16 November 2026, the complete local automated test suite passed: **59 passed, 0 failed in 5.07 seconds**. This run followed the latest `app.py` updates and the F-05 audio-readability validation changes. The dedicated audio-validator tests had also passed 8/8 in their targeted run.
 
-F-01 and F-04 remain fixed based on the recorded manual/source verification. OBS-02 remains fixed and manually verified. F-05 is fixed and locally regression-tested. F-02 remains awaiting review and integration; F-06 and current CI evidence remain open. The 59-test result is local evidence and must not be described as a new CI run. The report does not claim exhaustive execution of every STP requirement.
+F-06 dependency pinning was completed on `feature/saanvi-ui-redesign` in commit `d6bb550`. The five direct dependencies listed in `requirements.txt` installed successfully in the project virtual environment, and the full 59-test suite passed locally after the change. GitHub Actions Project CI run #45 also passed for commit `d6bb550` on PR #42; this CI result is separate from the local pytest result.
 
+F-01 and F-04 remain fixed based on the recorded manual/source verification. OBS-02 remains fixed and manually verified. F-05 is fixed and locally regression-tested. F-02 remains awaiting review and integration in PR #41. PR #42 remains open and awaits review; its CI run has passed, but it has not been merged. Performance, security/session-isolation, compatibility and final privacy-review activities remain outstanding. The report does not claim exhaustive execution of every STP requirement.
