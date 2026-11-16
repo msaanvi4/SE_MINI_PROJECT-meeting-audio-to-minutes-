@@ -192,6 +192,9 @@ if "validated_audio_name" not in st.session_state:
 if "validated_audio_signature" not in st.session_state:
     st.session_state["validated_audio_signature"] = None
 
+if "selected_audio_signature" not in st.session_state:
+    st.session_state["selected_audio_signature"] = None
+
 if "minutes_draft" not in st.session_state:
     st.session_state["minutes_draft"] = None
 
@@ -302,18 +305,19 @@ if uploaded_file is not None:
         file_digest,
     )
 
+    # Track the currently selected upload separately from the validated
+    # audio signature, which is cleared when its temporary file is deleted.
     previous_signature = st.session_state.get(
-        "validated_audio_signature"
+        "selected_audio_signature"
     )
 
-    if (
-        previous_signature is not None
-        and previous_signature != current_signature
-    ):
+    if previous_signature != current_signature:
         remove_temporary_audio()
         st.session_state.pop("transcript", None)
         st.session_state.pop("transcription_status", None)
+        st.session_state.pop("transcript_editor", None)
         clear_minutes()
+        st.session_state["selected_audio_signature"] = current_signature
 
     if st.button("Validate Audio", type="primary"):
         # Remove the previous temporary recording before replacing it.
@@ -336,10 +340,10 @@ if uploaded_file is not None:
             else:
                 st.error(result.message)
 
-        except Exception as exc:
+        except Exception:
             st.error(
                 "Audio validation failed unexpectedly. "
-                f"Details: {exc}"
+                "Please check the file and try again."
             )
 
     # --------------------------------------------------
@@ -390,13 +394,16 @@ if uploaded_file is not None:
                 else:
                     st.warning(result.status)
 
-            except Exception as exc:
+            except Exception:
                 st.error(
                     "Transcription failed. Check the recording, "
                     "model installation, available memory, and "
                     "internet connection if the model is downloading. "
-                    f"Details: {exc}"
+                    "Please try again."
                 )
+            finally:
+                # Remove the temporary audio after transcription succeeds or fails.
+                remove_temporary_audio()
 
     # --------------------------------------------------
     # Transcript review
@@ -437,11 +444,10 @@ if uploaded_file is not None:
                 )
                 st.success("Draft meeting minutes generated.")
 
-            except Exception as exc:
+            except Exception:
                 st.error(
                     "Could not generate meeting minutes. "
-                    "Please check the transcript and try again. "
-                    f"Details: {exc}"
+                    "Please check the transcript and try again."
                 )
 
     # --------------------------------------------------
@@ -584,10 +590,10 @@ if uploaded_file is not None:
                     )
                     st.success("Your edited minutes have been saved.")
 
-                except (ValueError, AttributeError, TypeError) as exc:
+                except (ValueError, AttributeError, TypeError):
                     st.error(
                         "The edited minutes could not be saved. "
-                        f"Check the fields and try again. Details: {exc}"
+                        "Please check the fields and try again."
                     )
 
         # --------------------------------------------------
@@ -631,18 +637,22 @@ if uploaded_file is not None:
                     key="download_minutes_docx",
                 )
 
-            except Exception as exc:
+            except Exception:
                 st.error(
                     "The Word document could not be generated. "
-                    "Please save your edited minutes again and retry. "
-                    f"Details: {exc}"
+                    "Please save your edited minutes again and retry."
                 )
 
 else:
     # Clear any previous upload's data when the uploader is empty.
-    if st.session_state.get("validated_audio_path"):
+    if (
+        st.session_state.get("selected_audio_signature") is not None
+        or st.session_state.get("validated_audio_path")
+    ):
         remove_temporary_audio()
 
+    st.session_state["selected_audio_signature"] = None
     st.session_state.pop("transcript", None)
     st.session_state.pop("transcription_status", None)
+    st.session_state.pop("transcript_editor", None)
     clear_minutes()
