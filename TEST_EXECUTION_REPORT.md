@@ -1,12 +1,14 @@
-﻿# Test Execution Report
+# Test Execution Report
 
 ## Meeting Audio to Structured Minutes
 
-**Report date:** 7 November 2026
+**Report last updated:** 16 November 2026
+
+**Original validation report date:** 7 November 2026
 
 **Testing responsibility:** Test Plan, Validation, and Evidence
 
-**Project branch:** `test/ramalakshmi-us04-verification`
+**Project branch for latest local verification:** `feature/saanvi-ui-redesign`
 
 **Base branch:** `upstream/main` (`3ae4f0f`)
 
@@ -327,7 +329,9 @@ The actual Faster-Whisper transcription and transcript-to-minutes workflow were 
 
 **Impact:** A user could potentially mistake an earlier transcript for the result of the currently selected file.
 
-**Status:** Needs investigation. This is a potential stale-state issue, not a confirmed defect until reproduced and reviewed by the feature owner.
+**Fix and verification (15 Nov 2026):** `app.py` now tracks the currently selected upload separately from the validated-audio signature using `selected_audio_signature`. When the selected file changes or the uploader is cleared, the app removes the prior temporary audio, clears the transcript and transcription status, resets the transcript editor state, and clears generated minutes. This keeps upload-change detection working even after transcription cleanup clears the validated-audio signature. The user manually confirmed the workflow: transcribe a valid recording, select a different invalid recording, confirm the previous transcript/minutes disappear, then clear the uploader and confirm temporary audio cleanup.
+
+**Status:** Fixed and manually verified on 15 Nov 2026. The full local automated suite also passed after the change (56 passed in 3.99 seconds).
 
 ### OBS-03: Python version verification
 
@@ -557,4 +561,302 @@ GitHub Actions Project CI passed for the recorded pull requests, and the final t
 These results demonstrate successful execution of the recorded tests and workflows. They do not establish exhaustive verification of every functional, non-functional, security, performance, or compatibility requirement.
 
 
+---
 
+# 14. Final Integration and Security Update - 15 November 2026
+
+This section records the latest local verification performed after the 13 November validation update. Earlier sections are retained as historical records; where earlier counts or statuses differ, this dated update is the latest evidence.
+
+## 14.1 Latest Automated Test Execution
+
+**Date:** 15 November 2026
+
+**Environment:** Windows 11, Python 3.11 virtual environment, pytest
+
+**Command executed:**
+
+```powershell
+python -m pytest -q
+```
+
+| Metric | Result |
+|---|---:|
+| Tests collected/executed | 56 |
+| Passed | 56 |
+| Failed | 0 |
+| Skipped | 0 |
+| Execution time | 4.05 seconds |
+| Pass rate | 100% |
+
+**Result:** All 56 tests passed. This is the latest local test result and confirms the suite remained green after the `app.py` security changes. It is not a claim that a new GitHub Actions run was executed.
+
+## 14.2 F-01: Temporary Audio Cleanup
+
+**Finding:** Temporary audio files were not consistently removed after transcription.
+
+**Change made:** The transcription operation in `app.py` now invokes `remove_temporary_audio()` from a `finally` block. Cleanup is therefore attempted whether transcription succeeds or raises an exception. Existing cleanup behavior also removes the previous temporary file when a replacement upload is validated and when the uploader is cleared.
+
+**Manual verification:** The updated application was run locally. The upload, validation and transcription workflow was exercised, and the user confirmed that the workflow was working and temporary-file cleanup behaved as expected.
+
+**Status:** Fixed and manually verified on 15 November 2026.
+
+## 14.3 F-04: Raw Exception Details in User-Facing Errors
+
+**Finding:** Five error handlers in `app.py` exposed raw exception text, potentially including local filesystem paths.
+
+**Change made:** Raw exception interpolation was removed from the following user-facing error paths:
+- Audio validation
+- Audio transcription
+- Meeting-minutes generation
+- Saving edited minutes
+- DOCX export
+
+The application now displays safe, user-oriented error messages rather than exception contents.
+
+**Source verification command:**
+
+```powershell
+Select-String -Path app.py -Pattern '\{exc\}|Details:'
+```
+
+**Observed result:** No matches were returned.
+
+**Status:** Fixed and source-verified on 15 November 2026.
+
+## 14.4 Regression Test Result After F-01 and F-04 Changes
+
+After the updated `app.py` was installed, the full test suite was run again:
+
+```powershell
+python -m pytest -q
+```
+
+**Result:** 56 passed in 4.05 seconds; zero failures.
+
+The successful regression run confirms that the existing automated tests continued to pass after both changes. The manual application check separately confirmed the updated audio workflow.
+
+## 14.5 Updated Finding Status
+
+| Finding | Latest status | Evidence / remaining work |
+|---|---|---|
+| F-01 — Temporary audio cleanup | Fixed; manually verified | Cleanup runs in `finally` after transcription; upload/transcription workflow manually exercised on 15 Nov 2026. |
+| F-02 — DOCX XML control-character handling | In progress / awaiting review and merge | PR #41 contains the proposed export sanitization and regression tests. Do not mark closed until review updates are completed and the fix is integrated and verified. |
+| F-03 — Streamlit traceback details | Previously fixed | `.streamlit/config.toml` sets `showErrorDetails = "none"`; earlier configuration test evidence remains recorded above. |
+| F-04 — Raw exception details in UI | Fixed; source-verified | No `{exc}` or `Details:` matches in `app.py`; five handlers updated on 15 Nov 2026. |
+| F-05 — Basic audio signature validation limitations | Open | Decide whether to add deeper decode/readability validation or document the limitation. |
+| F-06 — Unpinned dependencies | Open | Review dependency pins and separation of test-only requirements. |
+| F-07 — Current CI evidence | Pending | Add a link to a current GitHub Actions run. The 56-pass result in this update is local evidence only. |
+| F-08 — Test report currency | Updated in this revision; evidence follow-up remains | This report now records the 15 Nov 2026 56-pass result. Reconcile the other testing reports and add current CI evidence when available. |
+| F-09 — General audio ignore rules | Previously fixed | `.gitignore` includes common audio extensions; earlier configuration test evidence remains recorded above. |
+
+## 14.6 Remaining Validation Activities
+
+The following items remain open and must not be represented as passed without additional evidence:
+
+1. Complete the remaining performance tests.
+2. Complete the required session-isolation and security checks, or clearly identify the earlier checks and their scope.
+3. Complete the browser and operating-system compatibility matrix.
+4. Decide and document the F-05 audio readability/signature limitation.
+5. Review and pin dependencies as appropriate (F-06).
+6. Add a current GitHub Actions run link (F-07).
+7. Perform the final privacy review of submitted screenshots and evidence.
+8. Confirm that the latest application and documentation changes are integrated into the intended branch before final submission.
+
+## 14.7 Updated Conclusion
+
+On 15 November 2026, the complete local automated test suite passed: **56 passed, 0 failed**. The updated application workflow was manually exercised, including audio upload, validation and transcription. The F-01 temporary-audio cleanup change was manually verified. The F-04 source check confirmed that the five identified `app.py` error handlers no longer expose raw exception details.
+
+These results support marking F-01 and F-04 as fixed in this local integration review. F-02 remains subject to PR review and integration. F-05, F-06 and the outstanding validation activities listed above remain open. The 56-test local result must not be described as a new CI run, and the report does not claim exhaustive execution of every STP requirement.
+
+
+## 14.8 OBS-02 Fix and Final Regression Verification (15 Nov 2026)
+
+The stale-transcript issue was addressed by separating the current uploader selection state (`selected_audio_signature`) from the validated file state (`validated_audio_signature`). A changed upload or cleared uploader now clears the prior transcript, transcription status, transcript editor state and generated minutes, and invokes the existing temporary-audio cleanup. The validated signature can therefore be cleared after transcription without disabling detection of a subsequent upload change.
+
+**Manual verification:** The user confirmed all requested workflow checks passed: a valid recording was uploaded, validated and transcribed; selecting a different invalid recording removed the old transcript and minutes; clearing the uploader removed the temporary audio.
+
+**Automated regression:** `python -m pytest -q` — **56 passed in 3.99 seconds**, zero failures. This is local test evidence, not a new GitHub Actions result.
+
+**OBS-02 status: Fixed and manually verified.**
+
+
+## 15. F-05 Audio Readability Validation and Full Regression (15 Nov 2026)
+
+### 15.1 Audio validator improvement
+
+The audio validator was strengthened to go beyond extension and basic container-signature checks. It now uses the existing PyAV dependency (`av==18.1.0`) to:
+- Open the uploaded media with FFmpeg through PyAV.
+- Confirm that at least one audio stream is present.
+- Check that the detected container is compatible with the supplied extension.
+- Decode at least one audio frame before accepting the file.
+
+The dedicated tests cover a valid decodable PCM WAV, header-only fake WAV/MP3/M4A inputs, unsupported extension, empty file, oversized file and corrupted input.
+
+**Dedicated test command:** `python -m pytest test_audio_validator.py -v`
+
+**Result:** 8 passed, 0 failed.
+
+### 15.2 Integration test fixture correction
+
+The integration test previously supplied only a WAV-like RIFF header and no decodable audio frames. Since the validator now verifies actual audio readability, the test fixture was updated to create a short valid PCM WAV in memory using Python's standard `wave` module. This changes the test data, not the production validation requirement.
+
+### 15.3 Full regression result
+
+**Command:**
+
+```powershell
+python -m pytest -q
+```
+
+**Latest observed result (15 November 2026):**
+
+| Metric | Result |
+|---|---:|
+| Tests collected/executed | 59 |
+| Passed | 59 |
+| Failed | 0 |
+| Execution time | 6.10 seconds |
+| Pass rate | 100% |
+
+**Result:** All 59 tests passed locally. This is not a claim about GitHub Actions or a CI run.
+
+### 15.4 Updated finding status
+
+| Finding | Latest status | Evidence / remaining work |
+|---|---|---|
+| F-01 — Temporary audio cleanup | Fixed; manually verified | Cleanup behavior confirmed during upload/transcription/replacement/clear workflow. |
+| F-02 — DOCX XML control-character handling | In progress / awaiting review and merge | PR #41 remains subject to review, integration and regression verification. |
+| F-03 — Streamlit traceback details | Previously fixed | `.streamlit/config.toml` sets `showErrorDetails = "none"`; earlier configuration evidence remains recorded. |
+| F-04 — Raw exception details in UI | Fixed; source-verified | Five identified UI handlers no longer interpolate raw exception details. |
+| F-05 — Audio signature/readability validation | Fixed; locally regression-tested | PyAV audio-stream and frame-decode check; 8 dedicated tests and 59-test full suite pass. |
+| F-06 — Unpinned dependencies | Open | Review dependency pins and separation of test-only requirements. |
+| F-07 — Current CI evidence | Pending | Add a link to a current GitHub Actions run. The 59-pass result is local evidence only. |
+| F-08 — Test report currency | Updated in this revision; evidence follow-up remains | This report records the 15 Nov 2026 59-pass local result. Other testing reports and CI evidence still require reconciliation. |
+| F-09 — General audio ignore rules | Previously fixed | `.gitignore` includes common audio extensions; earlier configuration test evidence remains recorded. |
+| OBS-02 — Stale transcript after invalid upload | Fixed; manually verified | Separate selected-upload signature ensures stale transcript/minutes state is cleared when upload changes or is cleared. |
+
+### 15.5 Remaining validation activities
+
+1. Complete the remaining performance tests.
+2. Complete required session-isolation and security checks, or clearly identify earlier checks and their scope.
+3. Complete the browser and operating-system compatibility matrix.
+4. Review and pin dependencies as appropriate (F-06).
+5. Add a current GitHub Actions run link (F-07).
+6. Perform the final privacy review of submitted screenshots and evidence.
+7. Confirm the latest application and documentation changes are integrated into the intended branch before final submission.
+
+### 15.6 Updated conclusion
+
+On 15 November 2026, the complete local automated test suite passed: **59 passed, 0 failed in 6.10 seconds**. The dedicated audio-validator tests passed 8/8. The validator now checks for an audio stream and successfully decodes at least one audio frame, and the integration test uses a genuine decodable WAV fixture. F-05 can therefore be marked fixed and locally regression-tested.
+
+F-01 and F-04 remain fixed based on the previously recorded manual/source verification, and OBS-02 remains fixed and manually verified. F-02 remains subject to PR review and integration. F-06 and current CI evidence remain open. The 59-test result is local evidence and must not be described as a new CI run.
+
+---
+
+# 16. Latest Regression Verification Update - 16 November 2026
+
+This section supersedes earlier full-suite execution timings and counts where they differ. Earlier sections are retained as historical records.
+
+## 16.1 Latest automated test execution
+
+**Date:** 16 November 2026
+
+**Environment:** Windows, Python 3.11 virtual environment, pytest
+
+**Command executed:**
+
+```powershell
+python -m pytest -q
+```
+
+| Metric | Result |
+|---|---:|
+| Tests collected/executed | 59 |
+| Passed | 59 |
+| Failed | 0 |
+| Execution time | 5.07 seconds |
+| Pass rate | 100% |
+
+**Result:** All 59 tests passed locally in 5.07 seconds. This is a local regression result and does not represent a new GitHub Actions run.
+
+## 16.2 Changes included in this regression run
+
+The full suite was run after the latest complete `app.py` replacement and the F-05 audio-validator changes.
+
+- **F-01 — Temporary audio cleanup:** `app.py` attempts temporary-audio cleanup after transcription, whether it succeeds or fails.
+- **F-04 — Raw exception details:** The five identified user-facing error handlers display generic messages rather than raw exception details.
+- **OBS-02 — Stale transcript after upload change:** The selected upload signature is tracked separately; changing or clearing the uploader resets the previous transcript, editor state and generated minutes.
+- **F-05 — Audio readability validation:** PyAV verifies a compatible container, the presence of an audio stream and successful decoding of at least one audio frame. The dedicated audio-validator suite previously passed 8/8 tests.
+
+The user also confirmed the OBS-02 manual workflow: transcribe a valid recording, select a different invalid recording, confirm the previous transcript and minutes disappear, then clear the uploader and confirm temporary-audio cleanup.
+
+## 16.3 Updated finding status
+
+| Finding | Latest status | Evidence / remaining work |
+|---|---|---|
+| F-01 — Temporary audio cleanup | Fixed; manually verified | Cleanup is attempted in the transcription `finally` block and during upload replacement/clear handling. |
+| F-02 — DOCX XML control-character handling | Awaiting review/integration | PR #41 remains open and has no review recorded yet. Review, merge and post-integration regression verification are still required. |
+| F-03 — Streamlit traceback details | Previously fixed | `.streamlit/config.toml` sets `showErrorDetails = "none"`; retain the earlier configuration evidence. |
+| F-04 — Raw exception details in UI | Fixed; source-verified | The five identified user-facing error handlers no longer interpolate raw exception details. |
+| F-05 — Audio readability validation | Fixed; locally regression-tested | PyAV stream/container/decode checks; 8 dedicated audio-validator tests passed and the full 59-test suite passed locally. |
+| F-06 — Unpinned dependencies | Fixed on feature branch | `requirements.txt` now pins `streamlit==1.65.0`, `faster-whisper==1.2.1`, `av==18.1.0`, `python-docx==1.2.0`, and `pytest==9.1.1`. The pinned requirements installed successfully in the project virtual environment and the 59-test suite passed locally. |
+| F-07 — Current CI evidence | Verified for PR #42 | GitHub Actions Project CI run #45 passed for commit `d6bb550` on `feature/saanvi-ui-redesign`. [View run #45](https://github.com/msaanvi4/SE_MINI_PROJECT-meeting-audio-to-minutes-/actions/runs/43886639877). |
+| F-08 — Test report currency | Updated in this revision | This section records the 16 November 2026 local test result, dependency pins, and successful CI run. Other historical sections are retained as historical records. |
+| F-09 — General audio ignore rules | Previously fixed | `.gitignore` includes common audio extensions; earlier configuration evidence remains recorded. |
+| OBS-02 — Stale transcript after invalid upload | Fixed; manually verified | Separate selected-upload signature ensures stale transcript/minutes state is cleared when the upload changes or is cleared. |
+
+## 16.4 Remaining validation activities
+
+The following activities remain open and must not be represented as passed without additional evidence:
+
+1. Complete the remaining performance tests.
+2. Complete required session-isolation and security checks, or clearly identify the scope of earlier checks.
+3. Complete the browser and operating-system compatibility matrix.
+4. Complete the final privacy review of submitted screenshots and evidence.
+5. Complete review and integration of PR #41 (F-02), then run post-integration regression tests.
+6. Obtain review and approval for PR #42, then merge only after the required review and repository checks are satisfied.
+7. Confirm the latest application and documentation changes are integrated into the intended branch before final submission, and run the final regression suite after integration.
+
+## 16.5 Updated conclusion
+
+On 16 November 2026, the complete local automated test suite passed: **59 passed, 0 failed in 5.07 seconds**. This run followed the latest `app.py` updates and the F-05 audio-readability validation changes. The dedicated audio-validator tests had also passed 8/8 in their targeted run.
+
+F-06 dependency pinning was completed on `feature/saanvi-ui-redesign` in commit `d6bb550`. The five direct dependencies listed in `requirements.txt` installed successfully in the project virtual environment, and the full 59-test suite passed locally after the change. GitHub Actions Project CI run #45 also passed for commit `d6bb550` on PR #42; this CI result is separate from the local pytest result.
+
+F-01 and F-04 remain fixed based on the recorded manual/source verification. OBS-02 remains fixed and manually verified. F-05 is fixed and locally regression-tested. F-02 remains awaiting review and integration in PR #41. PR #42 remains open and awaits review; its CI run has passed, but it has not been merged. Performance, security/session-isolation, compatibility and final privacy-review activities remain outstanding. The report does not claim exhaustive execution of every STP requirement.
+
+
+# 17. Performance Testing – 16 November 2026
+
+## Objective
+Measure the execution time of minutes extraction and DOCX export.
+
+## Test Environment
+- Python 3.11 virtual environment
+- Windows
+- Five benchmark iterations per operation
+- Synthetic transcript containing 4,200 words and 600 sentences
+
+## Results
+
+| Metric | Average | Median | Minimum |
+|---|---:|---:|---:|
+| Minutes extraction | 0.017347 s | 0.015689 s | 0.009403 s |
+| DOCX export | 1.430602 s | 0.994947 s | 0.834954 s |
+
+## Extraction Results
+- Topics extracted: 200
+- Decisions extracted: 200
+- Action items extracted: 200
+
+## DOCX Export
+- Generated document size: 37.97 KB
+- Export completed successfully.
+
+## Conclusion
+Both minutes extraction and DOCX export completed successfully
+during the local performance benchmark. The results establish
+an initial performance baseline for the tested synthetic input.
+
+Note: Audio transcription performance and end-to-end processing
+time were not measured in this benchmark.

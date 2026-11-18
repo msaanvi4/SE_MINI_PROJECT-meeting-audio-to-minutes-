@@ -1,5 +1,6 @@
-streamlit
+
+streamlit==1.65.0
 faster-whisper==1.2.1
 av==18.1.0
-python-docx
-pytest
+python-docx==1.2.0
+pytest==9.1.1

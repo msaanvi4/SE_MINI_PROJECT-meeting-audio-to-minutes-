@@ -24,16 +24,158 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("Meeting Audio to Structured Minutes")
 
-st.write(
-    "Upload a meeting recording to generate a transcript, "
-    "review the minutes, and download an editable Word document."
+# --------------------------------------------------
+# Visual design system
+# --------------------------------------------------
+
+st.markdown(
+    """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+
+    :root {
+        --ink: #18243a;
+        --muted: #64748b;
+        --brand: #5b5ce2;
+        --brand-dark: #4445c7;
+        --line: #e7eaf3;
+        --surface: #ffffff;
+        --soft: #f5f6ff;
+    }
+    html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
+    .stApp {
+        background:
+          radial-gradient(ellipse at 12% 0%, rgba(116,112,255,.10), transparent 34%),
+          radial-gradient(ellipse at 95% 8%, rgba(53,194,190,.09), transparent 28%),
+          #f7f8fc;
+        color: var(--ink);
+    }
+    [data-testid="stHeader"] { background: rgba(247,248,252,.82); }
+    .block-container { max-width: 1180px; padding-top: 2.1rem; padding-bottom: 4rem; }
+    h1, h2, h3 { font-family: 'Manrope', sans-serif !important; color: var(--ink); letter-spacing: -.035em; }
+    h1 { font-size: clamp(2rem, 4vw, 2.8rem) !important; font-weight: 800 !important; }
+    h2 { font-size: 1.55rem !important; font-weight: 750 !important; }
+    h3 { font-size: 1.12rem !important; font-weight: 700 !important; }
+    p, label, .stMarkdown { color: var(--ink); }
+    [data-testid="stFileUploader"] {
+        background: linear-gradient(135deg, #f3f2ff 0%, #f0fbfb 100%);
+        border: 1.5px dashed #aaaaf0;
+        border-radius: 20px;
+        padding: 1rem;
+        transition: border-color .2s ease, transform .2s ease;
+    }
+    [data-testid="stFileUploader"]:hover { border-color: var(--brand); transform: translateY(-1px); }
+    [data-testid="stFileUploader"] section { border: 0; }
+    [data-testid="stFileUploader"] button {
+        border-radius: 10px !important;
+        border: 1px solid #d9dafa !important;
+        background: white !important;
+        color: var(--brand-dark) !important;
+        font-weight: 700 !important;
+    }
+    .stButton > button, .stFormSubmitButton > button, .stDownloadButton > button {
+        border-radius: 12px !important;
+        min-height: 2.8rem;
+        padding: .55rem 1.1rem !important;
+        font-weight: 700 !important;
+        border: 1px solid #dedff5 !important;
+        box-shadow: 0 3px 10px rgba(34,43,90,.05);
+        transition: all .18s ease;
+    }
+    .stButton > button[kind="primary"], .stFormSubmitButton > button[kind="primary"] {
+        background: linear-gradient(115deg, #6263e9, #7772f5) !important;
+        color: white !important;
+        border: 0 !important;
+        box-shadow: 0 8px 18px rgba(91,92,226,.22);
+    }
+    .stButton > button:hover, .stFormSubmitButton > button:hover, .stDownloadButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(34,43,90,.12);
+        border-color: #aaaaf0 !important;
+    }
+    [data-testid="stTextInput"] input, [data-testid="stTextArea"] textarea {
+        border-radius: 12px !important;
+        border: 1px solid #dfe3ef !important;
+        background: #fff !important;
+        line-height: 1.55;
+    }
+    [data-testid="stTextInput"] input:focus, [data-testid="stTextArea"] textarea:focus {
+        border-color: #7772f5 !important;
+        box-shadow: 0 0 0 3px rgba(119,114,245,.12) !important;
+    }
+    [data-testid="stAlert"] { border-radius: 14px; border: 1px solid rgba(100,116,139,.12); }
+    [data-testid="stExpander"] {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: white;
+        overflow: hidden;
+    }
+    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] { gap: 1rem; }
+    hr { border-color: var(--line) !important; margin: 1.6rem 0 !important; }
+    .hero {
+        position: relative; overflow: hidden;
+        padding: 2rem 2.15rem; margin: .2rem 0 1.35rem;
+        border-radius: 24px;
+        color: white;
+        background: linear-gradient(115deg, #4547bf 0%, #6665e8 58%, #8276f4 100%);
+        box-shadow: 0 18px 38px rgba(79,78,196,.18);
+    }
+    .hero:after {
+        content: ''; position: absolute; width: 260px; height: 260px;
+        right: -65px; top: -115px; border-radius: 50%;
+        border: 1px solid rgba(255,255,255,.23);
+        box-shadow: 0 0 0 28px rgba(255,255,255,.05), 0 0 0 58px rgba(255,255,255,.04);
+    }
+    .hero-kicker { color: #dcdcff; text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 700; }
+    .hero-title { color: white; font: 800 clamp(1.8rem,4vw,2.65rem) 'Manrope',sans-serif; letter-spacing: -.045em; margin: .45rem 0 .55rem; }
+    .hero-copy { color: #eeedff; font-size: 1rem; max-width: 650px; margin: 0; line-height: 1.65; }
+    .hero-pill { display: inline-block; margin-top: 1.15rem; padding: .38rem .75rem; border-radius: 999px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.2); color: white; font-size: .78rem; font-weight: 600; }
+    .section-eyebrow { color: #7772d9; text-transform: uppercase; letter-spacing: .13em; font-size: .69rem; font-weight: 800; margin-bottom: .25rem; }
+    .section-heading { font: 750 1.45rem 'Manrope',sans-serif; letter-spacing: -.035em; color: #202b43; margin: 0 0 .35rem; }
+    .section-copy { color: #748097; margin: 0 0 1rem; font-size: .92rem; }
+    .step-strip { display:flex; gap:.55rem; flex-wrap:wrap; margin: .5rem 0 1.5rem; }
+    .step { display:flex; align-items:center; gap:.45rem; padding:.48rem .75rem; background:#fff; border:1px solid #e7e9f2; border-radius:999px; color:#64708a; font-size:.78rem; font-weight:650; }
+    .step-num { display:grid; place-items:center; width:1.35rem; height:1.35rem; border-radius:50%; background:#eeedff; color:#5556d4; font-size:.72rem; font-weight:800; }
+    .step.active { border-color:#c9c8ff; background:#f3f2ff; color:#4547bf; }
+    .mini-note { color:#7a8499; font-size:.82rem; }
+    @media (max-width: 700px) {
+      .block-container { padding: 1rem 1rem 3rem; }
+      .hero { padding: 1.5rem; border-radius: 18px; }
+      .step { font-size:.72rem; }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <div class="hero">
+      <div class="hero-kicker">Your meeting, made actionable</div>
+      <div class="hero-title">Turn conversations into clarity.</div>
+      <p class="hero-copy">Transform meeting recordings into clear transcripts, decisions and action items — then refine everything before sharing.</p>
+      <span class="hero-pill">✦ AI-assisted minutes · Human-reviewed · DOCX export</span>
+    </div>
+    <div class="step-strip">
+      <div class="step active"><span class="step-num">1</span> Upload audio</div>
+      <div class="step"><span class="step-num">2</span> Transcribe</div>
+      <div class="step"><span class="step-num">3</span> Review minutes</div>
+      <div class="step"><span class="step-num">4</span> Export</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    '<div class="section-eyebrow">Start here</div>'
+    '<div class="section-heading">Bring your meeting audio</div>'
+    '<p class="section-copy">Upload a recording and we’ll guide you through validation, transcription and structured minutes.</p>',
+    unsafe_allow_html=True,
 )
 
 st.info(
-    "Supported formats: WAV, MP3, M4A. "
-    "Maximum file size: 100 MB."
+    "Supported formats: WAV, MP3, M4A · Maximum file size: 100 MB."
 )
 
 
@@ -49,6 +191,9 @@ if "validated_audio_name" not in st.session_state:
 
 if "validated_audio_signature" not in st.session_state:
     st.session_state["validated_audio_signature"] = None
+
+if "selected_audio_signature" not in st.session_state:
+    st.session_state["selected_audio_signature"] = None
 
 if "minutes_draft" not in st.session_state:
     st.session_state["minutes_draft"] = None
@@ -160,18 +305,19 @@ if uploaded_file is not None:
         file_digest,
     )
 
+    # Track the currently selected upload separately from the validated
+    # audio signature, which is cleared when its temporary file is deleted.
     previous_signature = st.session_state.get(
-        "validated_audio_signature"
+        "selected_audio_signature"
     )
 
-    if (
-        previous_signature is not None
-        and previous_signature != current_signature
-    ):
+    if previous_signature != current_signature:
         remove_temporary_audio()
         st.session_state.pop("transcript", None)
         st.session_state.pop("transcription_status", None)
+        st.session_state.pop("transcript_editor", None)
         clear_minutes()
+        st.session_state["selected_audio_signature"] = current_signature
 
     if st.button("Validate Audio", type="primary"):
         # Remove the previous temporary recording before replacing it.
@@ -194,10 +340,10 @@ if uploaded_file is not None:
             else:
                 st.error(result.message)
 
-        except Exception as exc:
+        except Exception:
             st.error(
                 "Audio validation failed unexpectedly. "
-                f"Details: {exc}"
+                "Please check the file and try again."
             )
 
     # --------------------------------------------------
@@ -248,20 +394,28 @@ if uploaded_file is not None:
                 else:
                     st.warning(result.status)
 
-            except Exception as exc:
+            except Exception:
                 st.error(
                     "Transcription failed. Check the recording, "
                     "model installation, available memory, and "
                     "internet connection if the model is downloading. "
-                    f"Details: {exc}"
+                    "Please try again."
                 )
+            finally:
+                # Remove the temporary audio after transcription succeeds or fails.
+                remove_temporary_audio()
 
     # --------------------------------------------------
     # Transcript review
     # --------------------------------------------------
 
     if "transcript" in st.session_state:
-        st.subheader("Meeting Transcript")
+        st.markdown(
+            '<div class="section-eyebrow">Step 2 · Transcript</div>'
+            '<div class="section-heading">Review your transcript</div>'
+            '<p class="section-copy">Correct names, wording and details before generating the minutes.</p>',
+            unsafe_allow_html=True,
+        )
 
         edited_transcript = st.text_area(
             "Review and edit the transcript",
@@ -290,11 +444,10 @@ if uploaded_file is not None:
                 )
                 st.success("Draft meeting minutes generated.")
 
-            except Exception as exc:
+            except Exception:
                 st.error(
                     "Could not generate meeting minutes. "
-                    "Please check the transcript and try again. "
-                    f"Details: {exc}"
+                    "Please check the transcript and try again."
                 )
 
     # --------------------------------------------------
@@ -304,7 +457,12 @@ if uploaded_file is not None:
     draft = st.session_state.get("minutes_draft")
 
     if draft is not None:
-        st.subheader("Review Meeting Minutes")
+        st.markdown(
+            '<div class="section-eyebrow">Step 3 · Minutes</div>'
+            '<div class="section-heading">Shape the final meeting record</div>'
+            '<p class="section-copy">Review topics, decisions and ownership. Edit anything that needs clarification.</p>',
+            unsafe_allow_html=True,
+        )
 
         review_flags = st.session_state.get(
             "minutes_review_flags",
@@ -432,10 +590,10 @@ if uploaded_file is not None:
                     )
                     st.success("Your edited minutes have been saved.")
 
-                except (ValueError, AttributeError, TypeError) as exc:
+                except (ValueError, AttributeError, TypeError):
                     st.error(
                         "The edited minutes could not be saved. "
-                        f"Check the fields and try again. Details: {exc}"
+                        "Please check the fields and try again."
                     )
 
         # --------------------------------------------------
@@ -445,7 +603,12 @@ if uploaded_file is not None:
         validated = st.session_state.get("validated_minutes")
 
         if validated is not None:
-            st.subheader("Download Meeting Minutes")
+            st.markdown(
+                '<div class="section-eyebrow">Step 4 · Export</div>'
+                '<div class="section-heading">Your minutes are ready to share</div>'
+                '<p class="section-copy">Download an editable Word document for your team.</p>',
+                unsafe_allow_html=True,
+            )
 
             try:
                 export_data = validated_minutes_to_export_dict(validated)
@@ -474,18 +637,22 @@ if uploaded_file is not None:
                     key="download_minutes_docx",
                 )
 
-            except Exception as exc:
+            except Exception:
                 st.error(
                     "The Word document could not be generated. "
-                    "Please save your edited minutes again and retry. "
-                    f"Details: {exc}"
+                    "Please save your edited minutes again and retry."
                 )
 
 else:
     # Clear any previous upload's data when the uploader is empty.
-    if st.session_state.get("validated_audio_path"):
+    if (
+        st.session_state.get("selected_audio_signature") is not None
+        or st.session_state.get("validated_audio_path")
+    ):
         remove_temporary_audio()
 
+    st.session_state["selected_audio_signature"] = None
     st.session_state.pop("transcript", None)
     st.session_state.pop("transcription_status", None)
+    st.session_state.pop("transcript_editor", None)
     clear_minutes()
