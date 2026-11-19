@@ -1,6 +1,7 @@
 import io
 import unittest
 import wave
+from pathlib import Path
 
 from audio_validator import AudioValidator
 
@@ -12,7 +13,6 @@ def make_wav():
         wav_file.setnchannels(1)
         wav_file.setsampwidth(2)
         wav_file.setframerate(8000)
-        # 800 silent PCM samples (0.1 seconds).
         wav_file.writeframes(b"\x00\x00" * 800)
     return output.getvalue()
 
@@ -21,6 +21,29 @@ def make_file(data, name):
     file = io.BytesIO(data)
     file.name = name
     return file
+
+
+class UploadedAudioFile:
+    """File-like wrapper that exposes the filename expected by AudioValidator."""
+
+    def __init__(self, path):
+        self.name = path.name
+        self._file = path.open("rb")
+
+    def read(self, *args):
+        return self._file.read(*args)
+
+    def seek(self, *args):
+        return self._file.seek(*args)
+
+    def close(self):
+        self._file.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
 
 
 class TestAudioValidator(unittest.TestCase):
@@ -32,6 +55,24 @@ class TestAudioValidator(unittest.TestCase):
 
         self.assertTrue(result.valid)
         self.assertEqual(result.format, "WAV")
+        self.assertIn("successfully", result.message.lower())
+
+    def test_valid_mp3_audio(self):
+        path = Path(__file__).parent / "tests" / "fixtures" / "audio" / "valid_sample.mp3"
+        with UploadedAudioFile(path) as audio:
+            result = AudioValidator.validate(audio)
+
+        self.assertTrue(result.valid)
+        self.assertEqual(result.format, "MP3")
+        self.assertIn("successfully", result.message.lower())
+
+    def test_valid_m4a_audio(self):
+        path = Path(__file__).parent / "tests" / "fixtures" / "audio" / "valid_sample.m4a"
+        with UploadedAudioFile(path) as audio:
+            result = AudioValidator.validate(audio)
+
+        self.assertTrue(result.valid)
+        self.assertEqual(result.format, "M4A")
         self.assertIn("successfully", result.message.lower())
 
     def test_wav_header_without_audio_data_is_rejected(self):

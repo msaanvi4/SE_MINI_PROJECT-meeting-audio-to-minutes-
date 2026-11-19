@@ -243,3 +243,6 @@ editor_test_old.txt
 *.m4a
 *.ogg
 *.opus
+# Allow synthetic audio fixtures used only for automated tests
+!tests/fixtures/audio/valid_sample.mp3
+!tests/fixtures/audio/valid_sample.m4a

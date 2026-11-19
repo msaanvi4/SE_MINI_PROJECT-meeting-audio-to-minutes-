@@ -1,7 +1,7 @@
-﻿# Unit Test Report
+# Unit Test Report
 
 **Project:** Meeting Audio to Structured Minutes  
-**Date:** 13 November 2026  
+**Date:** 16 November 2026  
 **Python:** 3.11.9  
 **Test framework:** pytest 9.1.1
 
@@ -17,28 +17,16 @@ Command:
 
 | Metric | Result |
 |---|---:|
-| Tests collected | 56 |
-| Passed | 56 |
+| Tests collected | 61 |
+| Passed | 61 |
 | Failed | 0 |
 | Skipped | 0 |
-| Execution time | 10.26 seconds |
+| Execution time | 18.88 seconds |
 | Pass rate | 100% |
 
 ## 3. Test distribution
 
-| Test module | Tests passed |
-|---|---:|
-| test_audio_cleanup.py | 1 |
-| test_audio_validator.py | 5 |
-| test_integration_pipeline.py | 1 |
-| test_minutes_editor_export.py | 3 |
-| test_minutes_extractor.py | 8 |
-| test_project_config.py | 2 |
-| test_transcription.py | 5 |
-| tests/test_app_minutes_workflow.py | 1 |
-| tests/test_export_minutes.py | 15 |
-| tests/test_extraction.py | 15 |
-| **Total** | **56** |
+The latest execution output provided for this report confirms the aggregate result of 61 passing tests, but does not include per-module counts. Per-module distribution is therefore not listed rather than carrying forward the older 56-test breakdown.
 
 ## 4. Areas tested
 
@@ -56,6 +44,6 @@ Command:
 
 ## 5. Result
 
-All 56 collected automated tests passed with zero failures or skips.
+All 61 collected automated tests passed with zero failures or skips in 18.88 seconds.
 
 The result confirms successful execution of the recorded automated test suite. It does not establish that every possible input, application behavior or requirement has been tested.
