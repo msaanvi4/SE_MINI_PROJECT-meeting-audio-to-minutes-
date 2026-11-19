@@ -1,51 +1,71 @@
-﻿# Code Coverage Report
+# Code Coverage Report
 
 **Project:** Meeting Audio to Structured Minutes  
-**Date:** 13 November 2026  
-**Environment:** Python 3.11.9  
-**Coverage tool:** Coverage.py  
-**Test execution:** 56 tests passed
+**Date:** 19 November 2026  
+**Tool:** Coverage.py  
+**Test Framework:** Pytest
 
-## 1. Objective
+## 1. Test Execution Summary
 
-Measure how much of the application source code is executed by the automated test suite.
+The complete automated test suite was executed using:
 
-## 2. Application-only coverage
+`python -m coverage run --branch -m pytest -v`
 
-| Metric | Result |
-|---|---:|
-| Statements | 575 |
-| Covered statements | 478 |
-| Missed statements | 97 |
-| Statement coverage | 81% |
-| Branches | 222 |
-| Covered branches | 170 |
-| Missed branches | 52 |
-| Branch coverage | 77% |
+Results:
+- Total tests: 63
+- Passed: 63
+- Failed: 0
+- Execution time: 12.88 seconds
 
-## 3. Full-project supplementary coverage
+## 2. Application-Only Coverage
 
-The full-project measurement includes application modules and test files.
+Test files and the separate performance testing utility were excluded.
+
+Command:
+
+`python -m coverage report --include="app.py,app/*,audio_validator.py,docx_exporter.py,minutes_editor.py,minutes_extractor.py,transcription.py,validated_audio.py"`
 
 | Metric | Result |
 |---|---:|
-| Lines covered | 1001 |
-| Statements | 1106 |
-| Missing lines | 105 |
-| Line coverage | 88% |
-| Branches | 242 |
-| Covered branches | 182 |
-| Missing branches | 60 |
-| Branch coverage | 75% |
+| Statements | 615 |
+| Statements covered | 520 |
+| Statements missed | 95 |
+| Statement coverage | 84.55% |
+| Branches | 236 |
+| Branches covered | 186 |
+| Branches missed | 50 |
+| Partially covered branches | 34 |
+| Branch coverage | 78.81% |
+| Coverage.py total | 83% |
 
-## 4. Coverage interpretation
+## 3. Full-Project Coverage
 
-Application-only statement coverage is 81%. The result indicates that most measured application statements were exercised during the automated test run, while some code paths remain untested.
+This measurement includes application code, test files and supporting project files.
 
-The full-project result is higher partly because test files are included in that measurement. Therefore, the application-only result is the primary figure for evaluating application code coverage.
+| Metric | Result |
+|---|---:|
+| Statements | 1,281 |
+| Statements covered | 1,133 |
+| Statements missed | 148 |
+| Statement coverage | 88.45% |
+| Branches | 262 |
+| Branches covered | 199 |
+| Branches missed | 63 |
+| Partially covered branches | 43 |
+| Branch coverage | 75.95% |
+| Coverage.py total | 86% |
 
-## 5. Limitations
+## 4. Coverage Observations
 
-Coverage measures code execution, not correctness. A covered statement does not necessarily mean every possible input or behavior has been verified.
+- The application-only statement coverage is 84.55%.
+- The application-only branch coverage is 78.81%.
+- Audio validation has 85% statement coverage.
+- Minutes extraction has 92% statement coverage.
+- Export functionality has strong coverage, with app export at 98%.
+- Transcription and validated-audio handling contain additional untested paths.
 
-The report records the measured results and does not claim complete requirement coverage.
+## 5. Conclusion
+
+The complete automated test suite passed all 63 tests.
+
+Coverage results indicate that the core application workflows have substantial automated test coverage. Some conditional branches and error-handling paths remain uncovered and can be considered for future testing improvements.
